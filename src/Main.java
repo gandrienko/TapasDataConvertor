@@ -52,6 +52,7 @@ public class Main {
 
   protected static Hashtable<String,Flight> readFlights (String fname) {
     Hashtable<String,Flight> flights=new Hashtable(1000);
+    int N=0;
     try {
       BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(new File(fname+".csv")))) ;
       String strLine;
@@ -67,8 +68,12 @@ public class Main {
           if (flight.maxdelay<delay)
             flight.maxdelay=delay;
           flights.put(id,flight);
+          N++;
+          if (N % 200 == 0)
+            System.out.println("* flights: "+N+" lines processed, "+flights.size()+" flights recorded");
         }
         br.close();
+        System.out.println("* flights: "+N+" lines processed, "+flights.size()+" flights recorded");
       } catch  (IOException io) {}
     } catch (FileNotFoundException ex) {System.out.println("problem reading file "+fname+" : "+ex);}
     return flights;
@@ -87,6 +92,7 @@ public class Main {
       FileOutputStream fos = new FileOutputStream(new File(fnOutput+"Tests20210310a.csv"));
     	BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos));
       String strLine;
+      int N=0, M=0, K=0;
       try {
         String header=br.readLine();
         int columnFlightID=countCommas(header.substring(0,header.indexOf("FlightID"))),
@@ -104,6 +110,7 @@ public class Main {
           if (!id.equals(flightID)) { // search in hashtable only if a new flight
             flight=flights.get(id);
             flightID=id;
+            M++;
           }
           int delay=Integer.valueOf(tokens[columnDelays]);
           if (delay<=flight.maxdelay) {
@@ -134,11 +141,17 @@ public class Main {
                 for (Record r:vr) {
                   //bw.write("FLIGHTID,STEP,DELAY,SECTOR,ENTRYTIME,EXITTIME,ENTRYTIMEN,EXITTIMEN,FROMSECTOR,TOSECTOR\n");
                   bw.write(flight.id+","+step+","+delay+","+r.Sector+","+r.EntryTime+","+r.ExitTime+","+r.EntryTimeN+","+r.ExitTimeN+","+r.FromSector+","+r.ToSector+"\n");
+                  K++;
                 }
           }
+          N++;
+          if (N % 10000 == 0)
+            System.out.println("* snapshots: "+N+" lines processed, "+M+" flights recorded, "+K+" lines in total");
+
         }
         br.close();
         bw.close();
+        System.out.println("* snapshots: "+N+" lines processed, "+M+" flights recorded, "+K+" lines in total");
       } catch  (IOException io) {}
     } catch (FileNotFoundException ex) {System.out.println("problem reading file "+fname+" : "+ex);}
   }
@@ -150,8 +163,11 @@ public class Main {
            fnFlightPlans="C:\\CommonGISprojects\\tracks-avia\\TAPAS\\ATFCM-20210331\\0_delays\\scenario_20190801_exp0_baseline_flight_plans",
            fnOutput="C:\\CommonGISprojects\\tracks-avia\\TAPAS\\ATFCM-20210331\\0_delays\\output";
     Hashtable<String,Integer> capacities=readCapacities(fnCapacities);
+    System.out.println("* capacities: ready");
     Hashtable<String,Flight> flights=readFlights(fnFlights);
+    System.out.println("* flights: ready");
     readFlightPlans(fnFlightPlans,fnOutput,flights);
+    System.out.println("* flight plans: processed");
   }
 
 }
