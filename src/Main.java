@@ -1,5 +1,6 @@
 import java.io.*;
 import java.util.Hashtable;
+import java.util.Vector;
 
 class Flight {
   String id;
@@ -11,6 +12,19 @@ class Flight {
     delays=new int[1440];
     for (int i=0; i<delays.length; i++)
       delays[i]=0;
+  }
+}
+
+class Record {
+  String Sector, EntryTime, ExitTime, FromSector, ToSector;
+  int EntryTimeN, ExitTimeN;
+  protected int calc(String s) {
+    int n=Integer.valueOf(s.substring(0,2)).intValue()*60+Integer.valueOf(s.substring(3,5)).intValue();
+    return n;
+  }
+  public void calc() {
+    EntryTimeN=calc(EntryTime);
+    ExitTimeN=calc(ExitTime);
   }
 }
 
@@ -60,7 +74,14 @@ public class Main {
     return flights;
   }
 
-  protected static void readFlightPlans (String fname, String fnOutput) {
+  protected static int countCommas (String str) {
+    int n=0;
+    for (int i=0; i<str.length(); i++)
+      if (str.charAt(i)==',')
+        n++;
+    return n;
+  }
+  protected static void readFlightPlans (String fname, String fnOutput, Hashtable<String,Flight> flights) {
     try {
       BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(new File(fname+".csv")))) ;
       FileOutputStream fos = new FileOutputStream(new File(fnOutput+"Tests20210310a.csv"));
@@ -68,14 +89,53 @@ public class Main {
       String strLine;
       try {
         String header=br.readLine();
+        int columnFlightID=countCommas(header.substring(0,header.indexOf("FlightID"))),
+            columnDelays=countCommas(header.substring(0,header.indexOf("Delays"))),
+            columnSector=countCommas(header.substring(0,header.indexOf("Sector_0"))),
+            columnEntryTime=countCommas(header.substring(0,header.indexOf("EntryTime_0")));
         String[] columns=header.split(",");
         bw.write("FLIGHTID,STEP,DELAY,SECTOR,ENTRYTIME,EXITTIME,ENTRYTIMEN,EXITTIMEN,FROMSECTOR,TOSECTOR\n");
+        Flight flight=null;
+        String flightID=null;
         while ((strLine = br.readLine()) != null) {
           String str=strLine.replaceAll(" ","");
           String[] tokens=str.split(",");
-          String id=tokens[1];
-          //int step=Integer.valueOf(tokens[2]), delay=Integer.valueOf(tokens[3]);
-          //Flight flight=new Flight(id);
+          String id=tokens[columnFlightID];
+          if (!id.equals(flightID)) { // search in hashtable only if a new flight
+            flight=flights.get(id);
+            flightID=id;
+          }
+          int delay=Integer.valueOf(tokens[columnDelays]);
+          if (delay<=flight.maxdelay) {
+            // 1. parse record into a sequence of sectors with times
+            Vector<Record> vr=new Vector<Record>(columnEntryTime-columnSector);
+            for (int i=columnSector; i<columnEntryTime; i++)
+              if (tokens[i].equals("NULL") || tokens[i].equals("NONE"))
+                ;
+              else {
+                Record r=new Record();
+                r.Sector=tokens[i];
+                if (i>columnSector)
+                  r.FromSector=tokens[i-1];
+                else
+                  r.FromSector="NULL";
+                if (i<columnEntryTime)
+                  r.ToSector=tokens[i+1];
+                else
+                  r.ToSector="NULL";
+                r.EntryTime=tokens[columnEntryTime+i-columnSector];
+                r.ExitTime=tokens[1+columnEntryTime+i-columnSector];
+                r.calc();
+                vr.add(r);
+              }
+            // 2. output for all steps with the same delay
+            for (int step = 0; step < flight.delays.length; step++)
+              if (flight.delays[step] == delay)
+                for (Record r:vr) {
+                  //bw.write("FLIGHTID,STEP,DELAY,SECTOR,ENTRYTIME,EXITTIME,ENTRYTIMEN,EXITTIMEN,FROMSECTOR,TOSECTOR\n");
+                  bw.write(flight.id+","+step+","+delay+","+r.Sector+","+r.EntryTime+","+r.ExitTime+","+r.EntryTimeN+","+r.ExitTimeN+","+r.FromSector+","+r.ToSector+"\n");
+                }
+          }
         }
         br.close();
         bw.close();
@@ -91,7 +151,7 @@ public class Main {
            fnOutput="C:\\CommonGISprojects\\tracks-avia\\TAPAS\\ATFCM-20210331\\0_delays\\output";
     Hashtable<String,Integer> capacities=readCapacities(fnCapacities);
     Hashtable<String,Flight> flights=readFlights(fnFlights);
-    readFlightPlans(fnFlightPlans,fnOutput);
+    readFlightPlans(fnFlightPlans,fnOutput,flights);
   }
 
 }
