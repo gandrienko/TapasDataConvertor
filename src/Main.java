@@ -70,10 +70,10 @@ public class Main {
           flights.put(id,flight);
           N++;
           if (N % 200 == 0)
-            System.out.println("* flights: "+N+" lines processed, "+flights.size()+" flights recorded");
+            System.out.println("* snapshots: "+N+" lines processed, "+flights.size()+" flights recorded");
         }
         br.close();
-        System.out.println("* flights: "+N+" lines processed, "+flights.size()+" flights recorded");
+        System.out.println("* snapshots: "+N+" lines processed, "+flights.size()+" flights recorded");
       } catch  (IOException io) {}
     } catch (FileNotFoundException ex) {System.out.println("problem reading file "+fname+" : "+ex);}
     return flights;
@@ -146,12 +146,12 @@ public class Main {
           }
           N++;
           if (N % 10000 == 0)
-            System.out.println("* snapshots: "+N+" lines processed, "+M+" flights recorded, "+K+" lines in total");
+            System.out.println("* flights: "+N+" lines processed, "+M+" flights recorded, "+K+" lines in total");
 
         }
         br.close();
         bw.close();
-        System.out.println("* snapshots: "+N+" lines processed, "+M+" flights recorded, "+K+" lines in total");
+        System.out.println("* flights: "+N+" lines processed, "+M+" flights recorded, "+K+" lines in total");
       } catch  (IOException io) {}
     } catch (FileNotFoundException ex) {System.out.println("problem reading file "+fname+" : "+ex);}
   }
