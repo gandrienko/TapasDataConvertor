@@ -69,7 +69,7 @@ public class Main {
             flight.maxdelay=delay;
           flights.put(id,flight);
           N++;
-          if (N % 200 == 0)
+          if (N % 10000 == 0)
             System.out.println("* snapshots: "+N+" lines processed, "+flights.size()+" flights recorded");
         }
         br.close();
@@ -89,7 +89,7 @@ public class Main {
   protected static void readFlightPlans (String fname, String fnOutput, Hashtable<String,Flight> flights) {
     try {
       BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(new File(fname+".csv")))) ;
-      FileOutputStream fos = new FileOutputStream(new File(fnOutput+"Tests20210310a.csv"));
+      FileOutputStream fos = new FileOutputStream(new File(fnOutput+".csv"));
     	BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos));
       String strLine;
       int N=0, M=0, K=0;
@@ -145,7 +145,7 @@ public class Main {
                 }
           }
           N++;
-          if (N % 10000 == 0)
+          if (N % 200 == 0)
             System.out.println("* flights: "+N+" lines processed, "+M+" flights recorded, "+K+" lines in total");
 
         }
