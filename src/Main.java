@@ -63,13 +63,15 @@ public class Main {
           String[] tokens=str.split(",");
           String id=tokens[1];
           int step=Integer.valueOf(tokens[2]), delay=Integer.valueOf(tokens[3]);
-          Flight flight=new Flight(id);
+          Flight flight=flights.get(id);
+          if (flight==null)
+            flight=new Flight(id);
           flight.delays[step]=delay;
           if (flight.maxdelay<delay)
             flight.maxdelay=delay;
           flights.put(id,flight);
           N++;
-          if (N % 10000 == 0)
+          if (N % 100000 == 0)
             System.out.println("* snapshots: "+N+" lines processed, "+flights.size()+" flights recorded");
         }
         br.close();
@@ -114,6 +116,8 @@ public class Main {
           }
           int delay=Integer.valueOf(tokens[columnDelays]);
           if (delay<=flight.maxdelay) {
+            //if (delay>0)
+              //System.out.println("* delay="+delay);
             // 1. parse record into a sequence of sectors with times
             Vector<Record> vr=new Vector<Record>(columnEntryTime-columnSector);
             for (int i=columnSector; i<columnEntryTime; i++)
@@ -146,12 +150,11 @@ public class Main {
           }
           N++;
           if (N % 200 == 0)
-            System.out.println("* flights: "+N+" lines processed, "+M+" flights recorded, "+K+" lines in total");
-
+            System.out.println("* flights: "+M+" flights in "+N+" snapshot lines processed, "+K+" outputs recorded");
         }
         br.close();
         bw.close();
-        System.out.println("* flights: "+N+" lines processed, "+M+" flights recorded, "+K+" lines in total");
+        System.out.println("* flights: "+M+" flights in "+N+" snapshot lines processed, "+K+" outputs recorded");
       } catch  (IOException io) {}
     } catch (FileNotFoundException ex) {System.out.println("problem reading file "+fname+" : "+ex);}
   }
